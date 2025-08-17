@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Driver Dashboard</title>
+    <style>
+      body {
+        background: #1d1b1b;
+        color: #fff;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+      header {
+        background: #0d47a1; /* darker blue */
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header-left {
+        font-size: 20px;
+        font-weight: bold;
+      }
+
+      .header-center {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+      }
+
+      header input {
+        padding: 8px;
+        width: 60%;
+        max-width: 400px;
+        border: none;
+        border-radius: 5px;
+      }
+
+      /* Dropdown menu */
+      .dropdown {
+        position: relative;
+        display: inline-block;
+      }
+      .dropbtn {
+        background: #1565c0; /* slightly lighter blue for contrast */
+        color: white;
+        padding: 8px 12px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        background-color: #1e1e1e;
+        min-width: 140px;
+        box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+        z-index: 1;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+      .dropdown-content a {
+        color: white;
+        padding: 10px 12px;
+        text-decoration: none;
+        display: block;
+        font-size: 14px;
+      }
+      .dropdown-content a:hover {
+        background-color: #333;
+      }
+      .dropdown:hover .dropdown-content {
+        display: block;
+      }
+
+      .driver-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 15px;
+        padding: 15px;
+      }
+      .driver-card {
+        position: relative;
+        background: #1e1e1e;
+        border-radius: 10px;
+        padding: 25px; /* bigger padding */
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.3); /* cyan glow */
+      }
+      .driver-card:hover {
+        transform: scale(1.03);
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.6); /* brighter glow */
+      }
+      .driver-card img {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #21bfbf;
+        flex-shrink: 0;
+      }
+      .driver-info {
+        text-align: left;
+        flex-grow: 1;
+      }
+      .driver-name {
+        font-size: 18px;
+        font-weight: bold;
+      }
+      .driver-tricycle {
+        font-size: 14px;
+        color: #ccc;
+        margin-top: 4px;
+      }
+      .stars {
+        color: gold;
+        margin: 5px 0;
+      }
+      .view-btn {
+        display: inline-block;
+        padding: 6px 12px;
+        background: #00ffff; /* cyan button */
+        color: black;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 8px;
+        font-weight: bold;
+        font-size: 14px;
+      }
+
+      /* small square indicator */
+      .color-indicator {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 20px;
+        height: 20px;
+        border-radius: 3px;
+        border: 2px solid #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="header-left">Tri-Rate</div>
+
+      <div class="header-center">
+        <input type="text" id="search" placeholder="Search drivers..." />
+      </div>
+
+      <div class="dropdown">
+        <button class="dropbtn">Menu</button>
+        <div class="dropdown-content">
+          <a href="UserProfile.html">View Profile</a>
+          <a href="#" id="logoutBtn">Logout</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="driver-list" id="driverList"></div>
+
+    <script>
+      const drivers = [
+        {
+          id: "1",
+          name: "Lian Emmanuel Bugtai",
+          tricycle: "1453",
+          img: "https://via.placeholder.com/100",
+          color: "#0000ff",
+        },
+        {
+          id: "2",
+          name: "Louise Awit",
+          tricycle: "1415",
+          img: "https://via.placeholder.com/100",
+          color: "#0000ff",
+        },
+        {
+          id: "3",
+          name: "Jadi Suerto",
+          tricycle: "555",
+          img: "https://via.placeholder.com/100",
+          color: "#0000ff",
+        },
+        {
+          id: "4",
+          name: "Dale Napoles",
+          tricycle: "477",
+          img: "https://via.placeholder.com/100",
+          color: "#ffff00",
+        },
+        {
+          id: "5",
+          name: "Dan Ibarra",
+          tricycle: "1877",
+          img: "https://via.placeholder.com/100",
+          color: "#00ff00",
+        },
+      ];
+
+      function getAverageRating(driverId) {
+        const ratingData = JSON.parse(
+          localStorage.getItem("ratingData_" + driverId)
+        ) || {
+          sum: 0,
+          count: 0,
+        };
+        if (ratingData.count === 0) return 0;
+        return (ratingData.sum / ratingData.count).toFixed(1);
+      }
+
+      function getStarHTML(rating) {
+        let html = "";
+        for (let i = 1; i <= 5; i++) {
+          html += `<span>${i <= rating ? "★" : "☆"}</span>`;
+        }
+        return html;
+      }
+
+      function renderDashboard() {
+        const search = document.getElementById("search").value.toLowerCase();
+        const list = document.getElementById("driverList");
+        list.innerHTML = "";
+        drivers
+          .filter(
+            (d) =>
+              d.name.toLowerCase().includes(search) ||
+              d.tricycle.toLowerCase().includes(search)
+          )
+          .forEach((driver) => {
+            let avgRating = getAverageRating(driver.id);
+            list.innerHTML += `
+              <div class="driver-card">
+                <div class="color-indicator" style="background:${
+                  driver.color
+                }"></div>
+                <img src="${driver.img}" alt="${driver.name}">
+                <div class="driver-info">
+                  <div class="driver-name">${driver.name}</div>
+                  <div class="driver-tricycle">Tricycle #${
+                    driver.tricycle
+                  }</div>
+                  <div class="stars">${getStarHTML(
+                    Math.round(avgRating)
+                  )} <small>(${avgRating})</small></div>
+                  <a class="view-btn" href="DriverProfile.html?id=${
+                    driver.id
+                  }">View Profile</a>
+                </div>
+              </div>
+            `;
+          });
+      }
+
+      document
+        .getElementById("search")
+        .addEventListener("input", renderDashboard);
+
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        localStorage.removeItem("loggedInUser");
+        window.location.href = "login.html";
+      });
+
+      renderDashboard();
+    </script>
+  </body>
+</html>

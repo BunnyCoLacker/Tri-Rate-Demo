@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Driver Profile</title>
+    <style>
+      body {
+        background-color: #121212;
+        color: #ffffff;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: auto;
+        padding: 20px;
+        text-align: center;
+        background: #1e1e1e;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+      }
+
+      /* new flexbox wrapper */
+      .profile-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        text-align: left;
+        margin-bottom: 15px;
+      }
+
+      .driver-info {
+        flex: 1;
+      }
+
+      .driver-img {
+        display: inline-block;
+        padding: 5px;
+        border: 4px solid #00bcd4; /* cyan border */
+        border-radius: 50%;
+        width: 110px;
+        height: 110px;
+        overflow: hidden; /* ensures image fits circle */
+      }
+      .driver-img img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        display: block;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 22px;
+      }
+      .tricycle-number {
+        font-size: 14px;
+        color: #bbb;
+      }
+      .stars {
+        color: gold;
+        font-size: 20px;
+        margin: 10px 0;
+        text-align: center;
+      }
+      button {
+        background: #00bcd4; /* cyan */
+        color: white;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      button:hover {
+        background: #0097a7; /* darker cyan */
+      }
+      .comment-box {
+        margin-top: 15px;
+        text-align: left;
+      }
+      textarea {
+        width: 100%;
+        padding: 6px;
+        border-radius: 5px;
+        border: none;
+        resize: none;
+        background: #2a2a2a;
+        color: white;
+        min-height: 50px;
+      }
+      .comment {
+        background: #2a2a2a;
+        padding: 8px;
+        margin: 5px 0;
+        border-radius: 5px;
+      }
+      .comment strong {
+        color: #00bcd4;
+      }
+      .comment small {
+        color: gray;
+      }
+      .back-btn {
+        display: inline-block;
+        margin-bottom: 15px;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <a href="Dashboard.html" class="back-btn">
+        <button>← Return to Dashboard</button>
+      </a>
+
+      <!-- Profile section -->
+      <div class="profile-header">
+        <div class="driver-info">
+          <h1 id="driverName"></h1>
+          <div class="tricycle-number" id="driverTricycle"></div>
+        </div>
+        <div class="driver-img">
+          <img id="driverImg" src="" alt="Driver" />
+        </div>
+      </div>
+
+      <div class="stars" id="ratingStars"></div>
+
+      <h3>Rate this Driver</h3>
+      <div id="rateBtns"></div>
+
+      <div class="comment-box">
+        <textarea id="commentInput" placeholder="Write a comment..."></textarea>
+        <button onclick="addComment()">Post</button>
+      </div>
+      <div id="commentList"></div>
+    </div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const driverId = params.get("id");
+
+      const drivers = [
+        {
+          id: "1",
+          name: "Lian Emmanuel Bugtai",
+          tricycle: "1453",
+          img: "https://via.placeholder.com/150",
+        },
+        {
+          id: "2",
+          name: "Louise Awit",
+          tricycle: "1415",
+          img: "https://via.placeholder.com/150",
+        },
+        {
+          id: "3",
+          name: "Jadi Suerto",
+          tricycle: "555",
+          img: "https://via.placeholder.com/150",
+        },
+        {
+          id: "4",
+          name: "Dale Napoles",
+          tricycle: "477",
+          img: "https://via.placeholder.com/150",
+        },
+        {
+          id: "5",
+          name: "Dan Ibarra",
+          tricycle: "1877",
+          img: "https://via.placeholder.com/150",
+        },
+      ];
+
+      const driver = drivers.find((d) => d.id === driverId);
+      if (driver) {
+        document.getElementById("driverImg").src = driver.img;
+        document.getElementById("driverName").textContent = driver.name;
+        document.getElementById("driverTricycle").textContent =
+          "Tricycle No: " + driver.tricycle;
+      }
+
+      function saveRating(value) {
+        let data = JSON.parse(
+          localStorage.getItem("ratingData_" + driverId)
+        ) || { sum: 0, count: 0 };
+        data.sum += value;
+        data.count++;
+        localStorage.setItem("ratingData_" + driverId, JSON.stringify(data));
+        renderRating();
+      }
+
+      function renderRating() {
+        let data = JSON.parse(
+          localStorage.getItem("ratingData_" + driverId)
+        ) || { sum: 0, count: 0 };
+        let avg = data.count ? (data.sum / data.count).toFixed(1) : 0;
+        document.getElementById("ratingStars").innerHTML =
+          getStarHTML(Math.round(avg)) + ` (${avg})`;
+      }
+
+      function getStarHTML(rating) {
+        let html = "";
+        for (let i = 1; i <= 5; i++) {
+          html += `<span>${i <= rating ? "★" : "☆"}</span>`;
+        }
+        return html;
+      }
+
+      function renderRateButtons() {
+        let html = "";
+        for (let i = 1; i <= 5; i++) {
+          html += `<button onclick="saveRating(${i})">${i} ★</button> `;
+        }
+        document.getElementById("rateBtns").innerHTML = html;
+      }
+
+      function addComment() {
+        const commentInput = document.getElementById("commentInput");
+        const text = commentInput.value.trim();
+        if (!text) return;
+
+        const bannedWords = [
+          "buang",
+          "Buang",
+          "Yati",
+          "Fuck",
+          "fuck",
+          "BUANG",
+          "oten",
+          "Oten",
+          "OTEN",
+          "PUSSY",
+          "Puday",
+          "SHIT",
+          "shit",
+          "Shit",
+          "puday",
+        ];
+        const lowerText = text.toLowerCase();
+
+        const containsBannedWord = bannedWords.some((word) =>
+          lowerText.includes(word.toLowerCase())
+        );
+
+        if (containsBannedWord) {
+          alert("Your comment contains inappropriate language.");
+          return;
+        }
+
+        let comments =
+          JSON.parse(localStorage.getItem("comments_" + driverId)) || [];
+        comments.push({ user: "Anonymous", text });
+        localStorage.setItem("comments_" + driverId, JSON.stringify(comments));
+
+        commentInput.value = "";
+        renderComments();
+      }
+
+      function renderComments() {
+        const list = document.getElementById("commentList");
+        let comments =
+          JSON.parse(localStorage.getItem("comments_" + driverId)) || [];
+        list.innerHTML = comments
+          .map(
+            (c) =>
+              `<div class="comment"><strong>${c.user}</strong><br>${c.text}</div>`
+          )
+          .join("");
+      }
+
+      renderRateButtons();
+      renderRating();
+      renderComments();
+    </script>
+  </body>
+</html>
